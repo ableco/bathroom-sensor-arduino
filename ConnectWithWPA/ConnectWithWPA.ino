@@ -1,10 +1,10 @@
 /*
 
-   This example connects to an unencrypted Wifi network.
-   Then it prints the  MAC address of the Wifi shield,
-   the IP address obtained, and other network details.
+ This example connects to an unencrypted Wifi network.
+ Then it prints the  MAC address of the Wifi shield,
+ the IP address obtained, and other network details.
 
-Circuit:
+ Circuit:
  * WiFi shield attached
 
  created 13 July 2010
@@ -15,6 +15,7 @@ Circuit:
 #include <WiFi.h>
 #include "config.h"
 
+
 char server[] = "data.sparkfun.com";
 char ssid[] = kSSID;
 char pass[] = kWifiPassword;
@@ -22,9 +23,9 @@ char pass[] = kWifiPassword;
 String sparkfunStreamID = kSparkfunStreamID;
 String sparkfunPrivateKey = kSparkfunPrivateKey;
 
-unsigned long lastConnectionTime = 0;          // last time you connected to the server, in milliseconds
-boolean lastConnected = false;                 // state of the connection last time through the main loop
-const unsigned long postingInterval = 60*1000;  // delay between updates, in milliseconds
+unsigned long lastConnectionTime = 0;       // last time you connected to the server, in milliseconds
+boolean lastConnected = false;                  // state of the connection last time through the main loop
+const unsigned long postingInterval = 6000;  // delay between updates, in milliseconds
 
 
 int status = WL_IDLE_STATUS;
@@ -73,6 +74,8 @@ void setup() {
 void loop() {
   // check the network connection once every 10 seconds:
   int sensorVal = digitalRead(2);
+  delay(500);
+  //Serial.println(sensorVal);
 
   if (client.available()) {
     char c = client.read();
@@ -96,24 +99,29 @@ void loop() {
     client.stop();
   }
 
-  // if you're not connected, and ten seconds have passed since
+  // if you're not connected, and X seconds have passed since
   // your last connection, then connect again and send data:
   if (!client.connected() && (millis() - lastConnectionTime > postingInterval)) {
-    if (currentSensorStatus != sensorVal){ 
+    lastConnectionTime = millis();
+
+    if (currentSensorStatus != sensorVal){
       if (sensorVal == HIGH) {
         Serial.println("connecting to server...");
         if (client.connect(server, 80)) {
           httpRequest("Occupied");
           digitalWrite(9, HIGH);
           digitalWrite(8, LOW);
+        } else {
+          Serial.println("failed");
         }
       } else {
         Serial.println("connecting to server...");
-
         if (client.connect(server, 80)) {
           httpRequest("Vacant");
           digitalWrite(8, HIGH);
           digitalWrite(9, LOW);
+        } else {
+          Serial.println("failed");
         }
       }
 
@@ -131,7 +139,7 @@ void loop() {
 void httpRequest(String bathroomStatus) {
   Serial.println("making HTTP request...");
   // make HTTP GET request to twitter:
-  client.println("GET /input/" + sparkfunStreamID + "?private_key=" + sparkfunPrivateKey + "&status=" + bathroomStatus);
+  client.println("GET /input/" + kSparkfunStreamID + "?private_key=" + kSparkfunPrivateKey + "&status=" + bathroomStatus);
   client.println("Host:data.sparkfun.com");
   client.println("Connection:close");
   client.println();
@@ -194,3 +202,4 @@ void printCurrentNet() {
   Serial.println(encryption,HEX);
   Serial.println();
 }
+
